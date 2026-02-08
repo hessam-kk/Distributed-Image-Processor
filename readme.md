@@ -1,3 +1,47 @@
+```mermaid
+graph LR
+    %% Styles
+    classDef service fill:#3498DB,stroke:#2980B9,stroke-width:2px,color:white;
+    classDef pod fill:#2ECC71,stroke:#27AE60,stroke-width:2px,color:white;
+    classDef db fill:#E74C3C,stroke:#C0392B,stroke-width:2px,color:white;
+    classDef user fill:#34495E,stroke:#2C3E50,stroke-width:2px,color:white;
+
+    subgraph External [External World]
+        direction LR
+        User((User/Client)):::user
+    end
+
+    subgraph Cluster [Kubernetes Cluster]
+        direction LR
+        
+        %% Services (Load Balancers)
+        WebApp_Svc(Web API Service<br>NodePort: 30005):::service
+        Blur_Svc(Blur Service<br>ClusterIP: 5001):::service
+        BW_Svc(B&W Service<br>ClusterIP: 5001):::service
+        Redis_Svc(Redis Service<br>ClusterIP: 6379):::service
+
+        %% Pods (Containers)
+        WebApp_Pod[Web API Pods<br>Flask]:::pod
+        Blur_Pod[Blur Pods<br>Worker + Delay]:::pod
+        BW_Pod[BW Pods<br>Worker]:::pod
+        Redis_Pod[(Redis Database)]:::db
+
+        %% Connections
+        WebApp_Svc --> WebApp_Pod
+        Blur_Svc --> Blur_Pod
+        BW_Svc --> BW_Pod
+        Redis_Svc --> Redis_Pod
+
+        %% Logic Flow
+        WebApp_Pod -.->|POST /process <br> effect=blur| Blur_Svc
+        WebApp_Pod -.->|POST /process <br> effect=bw| BW_Svc
+        WebApp_Pod ==>|Save/Load| Redis_Svc
+    end
+
+    %% Ingress
+    User ==>|POST /upload| WebApp_Svc
+```
+
 # 📸 Kubernetes Microservices Image Processor
 
 A distributed image processing application built with **Python (Flask)** and **Redis**, designed to run on **Kubernetes**.
