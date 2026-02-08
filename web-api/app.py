@@ -33,6 +33,8 @@ def upload_file():
     current_image_data = file.read()
     filename = file.filename
 
+    worker_pod_name = "unknown"
+
     # Pipeline: Pass image through each requested service
     for effect in effects_list:
         target_url = None
@@ -50,6 +52,11 @@ def upload_file():
                 if response.status_code == 200:
                     # Update our current image with the processed result
                     current_image_data = response.content
+                    # CAPTURE THE POD NAME FROM WORKER HEADERS
+                    # The worker sends 'Content-Disposition' or a custom header
+                    if 'Content-Disposition' in response.headers:
+                        # We stored pod name in 'filename=' part of header
+                        worker_pod_name = response.headers.get('Content-Disposition')
                 else:
                     return jsonify({"error": f"Service {effect} failed"}), 500
             except Exception as e:
@@ -62,6 +69,7 @@ def upload_file():
     return jsonify({
         "id": image_id, 
         "applied_effects": effects_list,
+        "processed_by_pod": worker_pod_name,
         "view_url": f"/image/{image_id}"
     })
 
@@ -72,5 +80,7 @@ def get_image(id):
         return jsonify({"error": "Image not found"}), 404
     return send_file(io.BytesIO(img_data), mimetype='image/png')
 
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, threaded=True)
