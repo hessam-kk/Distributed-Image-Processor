@@ -1,5 +1,3 @@
----
-
 # 📸 Kubernetes Microservices Image Processor
 
 A distributed image processing application built with **Python (Flask)** and **Redis**, designed to run on **Kubernetes**.
